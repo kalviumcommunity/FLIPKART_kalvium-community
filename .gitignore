@@ -1,0 +1,50 @@
+# dependencies
+/node_modules
+
+# Next.js
+/.next/
+/out/
+
+# production
+/build
+
+# environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Vercel
+.vercel
+
+# Prisma generated files (optional)
+/prisma/dev.db
+/prisma/dev.db-journal
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+
+# Coverage
+coverage/
+
+# Cache
+.cache/
+
+echo "# Flipkart Smart Wishlist" > README.md
