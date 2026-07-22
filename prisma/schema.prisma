@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(cuid())
+  name          String
+  email         String     @unique
+  password      String? // null if user signed up via Google
+  image         String?
+  role          Role       @default(CUSTOMER)
+  createdAt     DateTime   @default(now())
+  wishlistItems Wishlist[]
+  cartItems     CartItem[]
+  orders        Order[]
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+model Product {
+  id             String     @id @default(cuid())
+  name           String
+  description    String
+  price          Decimal    @db.Decimal(10, 2)
+  originalPrice  Decimal    @db.Decimal(10, 2)
+  category       String
+  image          String
+  rating         Float      @default(4.0)
+  reviewCount    Int        @default(0)
+  stock          Int        @default(0)
+  inStock        Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  wishlistedBy   Wishlist[]
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+  stockUpdates   StockUpdateLog[]
+
+  @@index([category])
+}
+
+// A product is "in wishlist monitoring" simply by having a Wishlist row.
+// Removing the row stops all synchronization for that user/product pair (FR-14).
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model Order {
+  id         String      @id @default(cuid())
+  userId     String
+  total      Decimal     @db.Decimal(10, 2)
+  status     OrderStatus @default(PLACED)
+  createdAt  DateTime    @default(now())
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items      OrderItem[]
+}
+
+enum OrderStatus {
+  PLACED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2)
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+// Audit trail shown on the Admin Stock Management screen ("Recent stock updates")
+model StockUpdateLog {
+  id         String   @id @default(cuid())
+  productId  String
+  inStock    Boolean
+  stock      Int
+  changedBy  String? // admin user id or "system"
+  createdAt  DateTime @default(now())
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
