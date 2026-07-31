@@ -12,3 +12,4 @@ export function StockBadge({ inStock, className = '' }: { inStock: boolean; clas
     </span>
   );
 }
+//adding comment to test commit
